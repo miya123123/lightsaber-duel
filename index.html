@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2307080f'/%3E%3Cpath d='M18 48 46 16' stroke='%2372edff' stroke-width='8' stroke-linecap='round'/%3E%3Cpath d='M24 54 14 44' stroke='%23ff456b' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E" />
+    <title>Lightsaber Duel</title>
+  </head>
+  <body>
+    <div id="app">
+      <main id="game-shell" aria-label="ライトセイバー対戦ゲーム">
+        <div id="game-root"></div>
+        <section id="hud" aria-live="polite">
+          <div class="fighter-panel fighter-panel--player">
+            <span class="fighter-label">PLAYER</span>
+            <div class="bar"><span id="player-health"></span></div>
+            <small id="player-state">READY</small>
+          </div>
+          <div id="round-banner">DUEL</div>
+          <div class="fighter-panel fighter-panel--ai">
+            <span class="fighter-label">AI</span>
+            <div class="bar"><span id="ai-health"></span></div>
+            <small id="ai-state">READY</small>
+          </div>
+        </section>
+        <div id="controls-strip">
+          <span>WASD</span><b>MOVE</b>
+          <span>ARROWS</span><b>MOVE</b>
+          <span>Q / F</span><b>TURN</b>
+          <span>E</span><b>JUMP</b>
+          <span>SPACE</span><b>DASH</b>
+          <span>R</span><b>RESET</b>
+        </div>
+        <button id="restart-button" type="button" hidden>再戦</button>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

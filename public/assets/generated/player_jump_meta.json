@@ -1,0 +1,57 @@
+{
+  "source": "public/assets/generated/player_topdown_cutout.png",
+  "sheet": "public/assets/generated/player_jump_sheet.png",
+  "magenta_sheet": "public/assets/generated/player_jump_sheet_magenta.png",
+  "animation_gif": "public/assets/generated/player_jump_animation.gif",
+  "frame_width": 768,
+  "frame_height": 768,
+  "rows": 2,
+  "cols": 2,
+  "frames": [
+    {
+      "name": "crouch",
+      "scale_x": 1.08,
+      "scale_y": 0.86,
+      "rotation": -5,
+      "offset": [
+        0,
+        72
+      ],
+      "duration": 110
+    },
+    {
+      "name": "lift_off",
+      "scale_x": 0.98,
+      "scale_y": 1.02,
+      "rotation": 12,
+      "offset": [
+        0,
+        4
+      ],
+      "duration": 110
+    },
+    {
+      "name": "air_spin",
+      "scale_x": 1.04,
+      "scale_y": 1.04,
+      "rotation": 38,
+      "offset": [
+        0,
+        -42
+      ],
+      "duration": 130
+    },
+    {
+      "name": "landing",
+      "scale_x": 1.04,
+      "scale_y": 0.94,
+      "rotation": -10,
+      "offset": [
+        0,
+        46
+      ],
+      "duration": 120
+    }
+  ],
+  "method": "deterministic transform of existing generated player sprite"
+}
