@@ -48,8 +48,7 @@
 npm run dev
 ```
 
-## 使用技術
-
+# 使用技術
 - Codex（GPT-5.5・高）：開発とREADME作成に使用
 - image_gen（GPT-Image2）：各種画像生成に使用
 - Phaser 3 / TypeScript / Vite / Node.js：実装・ビルドに使用
