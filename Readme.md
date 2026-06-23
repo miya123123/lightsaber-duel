@@ -48,5 +48,14 @@
 npm run dev
 ```
 
-ターミナルに表示されたURLをブラウザで開いてください。既定のURLは`http://127.0.0.1:5173`です。終了するときは、起動したターミナルで`Ctrl+C`を押します。
+## 使用技術
+
+- Codex（GPT-5.5・高）：開発とREADME作成に使用
+- image_gen（GPT-Image2）：各種画像生成に使用
+- Phaser 3 / TypeScript / Vite / Node.js：実装・ビルドに使用
+- Playwright Interactive：テストに使用
+- agent-sprite-forge（generate2dsprite）：ジャンプアニメーション画像の生成に使用
+- OpenAI Docs：OpenAIの画像生成仕様の確認に使用
+
+ターミナルに表示されたURLをブラウザで開いてください。既定のURLは`http://127.0.0.1:5173`です。
 
