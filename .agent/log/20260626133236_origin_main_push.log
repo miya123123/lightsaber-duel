@@ -1,0 +1,25 @@
+# 作業ログ: origin/main への push
+
+## ユーザー依頼
+
+pushしてください。
+
+## 事前確認
+
+- ブランチ状態: `main...origin/main [ahead 3]`
+- 現在ブランチ: `main`
+- push 対象:
+  - `724e0d8 Readme.md更新`
+  - `8bbac1f Merge remote-tracking branch 'origin/main'`
+  - `4d25526 docs: mainとorigin/main統一作業を記録`
+
+## 実施予定
+
+- 今回の push 依頼に関する結果報告書と作業ログを作成します。
+- `git add .` と `git commit` で報告書を保存します。
+- 承認済みのため、`git push origin HEAD:main` を実行します。
+- push 後、`git ls-remote origin refs/heads/main` でリモート先端を確認します。
+
+## 備考
+
+`git pull --ff-only` は実行しません。
