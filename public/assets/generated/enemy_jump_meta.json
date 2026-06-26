@@ -1,175 +1,58 @@
 {
-  "target": "creature",
-  "mode": "animation",
-  "prompt": "",
-  "role": "enemy_jump",
-  "input": "public/assets/generated/enemy_jump_sheet_magenta.png",
-  "threshold": 100,
-  "edge_threshold": 150,
-  "duration": 120,
+  "source": "public/assets/generated/enemy_topdown_cutout.png",
+  "sheet": "public/assets/generated/enemy_jump_sheet.png",
+  "magenta_sheet": "public/assets/generated/enemy_jump_sheet_magenta.png",
+  "animation_gif": "public/assets/generated/enemy_jump_animation.gif",
+  "frame_width": 768,
+  "frame_height": 768,
   "rows": 2,
   "cols": 2,
-  "cell_size": 768,
-  "fit_scale": 0.82,
-  "trim_border": 4,
-  "edge_clean_depth": 3,
-  "align": "center",
-  "shared_scale": true,
-  "component_mode": "largest",
-  "component_padding": 10,
-  "min_component_area": 1,
-  "edge_touch_margin": 8,
-  "frame_labels": [
-    "enemy_jump-1",
-    "enemy_jump-2",
-    "enemy_jump-3",
-    "enemy_jump-4"
-  ],
+  "removed_white_pixels": 930,
   "frames": [
     {
-      "grid": [
+      "name": "compress",
+      "scale_x": 1.04,
+      "scale_y": 0.91,
+      "rotation": -4,
+      "offset": [
+        0,
+        54
+      ],
+      "duration": 115
+    },
+    {
+      "name": "lift",
+      "scale_x": 0.99,
+      "scale_y": 1.01,
+      "rotation": 8,
+      "offset": [
         0,
         0
       ],
-      "source_box": [
-        0,
-        0,
-        627,
-        627
-      ],
-      "component_mode": "largest",
-      "component_count": 1,
-      "selected_component_area": 70735,
-      "selected_component_bbox": [
-        178,
-        102,
-        536,
-        580
-      ],
-      "crop_bbox": [
-        168,
-        92,
-        546,
-        590
-      ],
-      "edge_touch": false,
-      "output_size": [
-        456,
-        600
-      ],
-      "paste_position": [
-        156,
-        84
-      ]
+      "duration": 115
     },
     {
-      "grid": [
+      "name": "airborne",
+      "scale_x": 1.01,
+      "scale_y": 1.02,
+      "rotation": 17,
+      "offset": [
         0,
-        1
+        -34
       ],
-      "source_box": [
-        627,
-        0,
-        1254,
-        627
-      ],
-      "component_mode": "largest",
-      "component_count": 1,
-      "selected_component_area": 75168,
-      "selected_component_bbox": [
-        116,
-        61,
-        474,
-        563
-      ],
-      "crop_bbox": [
-        106,
-        51,
-        484,
-        573
-      ],
-      "edge_touch": false,
-      "output_size": [
-        456,
-        629
-      ],
-      "paste_position": [
-        156,
-        69
-      ]
+      "duration": 130
     },
     {
-      "grid": [
-        1,
-        0
-      ],
-      "source_box": [
+      "name": "recover",
+      "scale_x": 1.03,
+      "scale_y": 0.95,
+      "rotation": -7,
+      "offset": [
         0,
-        627,
-        627,
-        1254
+        36
       ],
-      "component_mode": "largest",
-      "component_count": 1,
-      "selected_component_area": 65125,
-      "selected_component_bbox": [
-        198,
-        20,
-        536,
-        509
-      ],
-      "crop_bbox": [
-        188,
-        10,
-        546,
-        519
-      ],
-      "edge_touch": false,
-      "output_size": [
-        431,
-        614
-      ],
-      "paste_position": [
-        168,
-        77
-      ]
-    },
-    {
-      "grid": [
-        1,
-        1
-      ],
-      "source_box": [
-        627,
-        627,
-        1254,
-        1254
-      ],
-      "component_mode": "largest",
-      "component_count": 2,
-      "selected_component_area": 72794,
-      "selected_component_bbox": [
-        97,
-        77,
-        461,
-        558
-      ],
-      "crop_bbox": [
-        87,
-        67,
-        471,
-        568
-      ],
-      "edge_touch": false,
-      "output_size": [
-        463,
-        604
-      ],
-      "paste_position": [
-        152,
-        82
-      ]
+      "duration": 120
     }
   ],
-  "edge_touch_frames": []
+  "method": "deterministic transform of existing generated enemy sprite after white-remnant cleanup"
 }
