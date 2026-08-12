@@ -1,0 +1,89 @@
+{
+  "source_raw": "/Users/miya/.codex/generated_images/019f1b6b-4c98-7b12-81a8-e4e37094f882/ig_0fee7fcfba1db81e016a4475c8d8b081979bcbcf588fde8a36.png",
+  "sheet": "public/assets/generated/dual_enemy_jump_sheet.png",
+  "magenta_sheet": "public/assets/generated/dual_enemy_jump_sheet_magenta.png",
+  "synced_to": [
+    "GitHub/lightsaber-duel/public/assets/generated/dual_enemy_jump_sheet.png",
+    "GitHub/lightsaber-duel/public/assets/generated/dual_enemy_jump_sheet_magenta.png"
+  ],
+  "frame_width": 627,
+  "frame_height": 627,
+  "rows": 2,
+  "cols": 2,
+  "removed_background_pixels": 1353023,
+  "kept_subject_pixels": 219493,
+  "frames": [
+    {
+      "frame": 1,
+      "bbox": [
+        94,
+        155,
+        565,
+        482
+      ],
+      "visible_width": 471,
+      "visible_height": 327,
+      "margins": {
+        "left": 94,
+        "top": 155,
+        "right": 62,
+        "bottom": 145
+      },
+      "edge_touch": false
+    },
+    {
+      "frame": 2,
+      "bbox": [
+        52,
+        118,
+        539,
+        491
+      ],
+      "visible_width": 487,
+      "visible_height": 373,
+      "margins": {
+        "left": 52,
+        "top": 118,
+        "right": 88,
+        "bottom": 136
+      },
+      "edge_touch": false
+    },
+    {
+      "frame": 3,
+      "bbox": [
+        108,
+        38,
+        547,
+        431
+      ],
+      "visible_width": 439,
+      "visible_height": 393,
+      "margins": {
+        "left": 108,
+        "top": 38,
+        "right": 80,
+        "bottom": 196
+      },
+      "edge_touch": false
+    },
+    {
+      "frame": 4,
+      "bbox": [
+        61,
+        145,
+        536,
+        470
+      ],
+      "visible_width": 475,
+      "visible_height": 325,
+      "margins": {
+        "left": 61,
+        "top": 145,
+        "right": 91,
+        "bottom": 157
+      },
+      "edge_touch": false
+    }
+  ]
+}

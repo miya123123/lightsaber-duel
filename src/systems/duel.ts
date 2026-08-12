@@ -1,9 +1,11 @@
 import { clamp, segmentContactPoint, segmentDistance, segmentIntersectsRect, type Rect, type Segment, type Vec2 } from "./geometry";
 
 export type FighterId = "player" | "ai";
+export type FighterLoadout = "single" | "dual";
 
 export type FighterState = {
   id: FighterId;
+  loadout: FighterLoadout;
   x: number;
   y: number;
   vx: number;
@@ -30,7 +32,7 @@ export type DuelInput = {
 };
 
 export type DuelEvent =
-  | { type: "body-hit"; attacker: FighterId; defender: FighterId; damage: number; point: Vec2 }
+  | { type: "body-hit"; attacker: FighterId; defender: FighterId; damage: number; saberHits: number; points: Vec2[] }
   | { type: "saber-clash"; point: Vec2 }
   | { type: "winner"; winner: FighterId };
 
@@ -40,6 +42,9 @@ export type DuelSnapshot = {
   events: DuelEvent[];
   status: "playing" | "player-win" | "ai-win";
   time: number;
+  aiLoadout: FighterLoadout;
+  aiCenterThreat: boolean;
+  aiCenterCounterCount: number;
 };
 
 const WORLD = {
@@ -54,6 +59,10 @@ const WORLD = {
   bodyHeight: 92,
   bodySeparation: 96,
   saberLength: 78,
+  dualSaberLength: 72,
+  dualSaberAngleOffset: Math.PI / 6,
+  dualSaberSideOffset: 15,
+  saberForwardOffset: 26,
   saberHitPadding: 5,
   saberClashDistance: 6,
   saberKnockback: 560,
@@ -65,26 +74,34 @@ const WORLD = {
   dashSpeed: 760,
   turnSpeed: Math.PI * 1.5,
   aiTurnSpeed: Math.PI * 0.45,
+  dualAiTurnSpeed: Math.PI * 0.72,
+  dualCenterThreatDepth: 220,
+  dualCenterThreatHalfWidth: 32,
+  dualCenterAimTolerance: Math.PI / 9,
   damage: 12
 };
 
 export class DuelSystem {
-  private player: FighterState = createFighter("player", 370, 360, 0);
-  private ai: FighterState = createFighter("ai", 910, 360, Math.PI);
+  private player: FighterState = createFighter("player", 370, 360, 0, "single");
+  private ai: FighterState = createFighter("ai", 910, 360, Math.PI, "single");
+  private aiLoadout: FighterLoadout = "single";
   private status: DuelSnapshot["status"] = "playing";
   private time = 0;
   private aiThink = 0;
   private aiStrafe = 0;
   private aiActionThink = 0.75;
+  private aiCenterCounterCount = 0;
 
-  reset(): DuelSnapshot {
-    this.player = createFighter("player", 370, 360, 0);
-    this.ai = createFighter("ai", 910, 360, Math.PI);
+  reset(aiLoadout: FighterLoadout = this.aiLoadout): DuelSnapshot {
+    this.aiLoadout = aiLoadout;
+    this.player = createFighter("player", 370, 360, 0, "single");
+    this.ai = createFighter("ai", 910, 360, Math.PI, aiLoadout);
     this.status = "playing";
     this.time = 0;
     this.aiThink = 0;
     this.aiStrafe = 0;
     this.aiActionThink = 0.75;
+    this.aiCenterCounterCount = 0;
     return this.snapshot([]);
   }
 
@@ -120,7 +137,11 @@ export class DuelSystem {
   }
 
   getSaber(id: FighterId): Segment {
-    return saberSegment(id === "player" ? this.player : this.ai);
+    return saberSegments(id === "player" ? this.player : this.ai)[0];
+  }
+
+  getSabers(id: FighterId): Segment[] {
+    return saberSegments(id === "player" ? this.player : this.ai);
   }
 
   private applyInput(fighter: FighterState, input: DuelInput, dt: number): void {
@@ -188,7 +209,8 @@ export class DuelSystem {
   private turnAiTowardPlayer(dt: number): void {
     const targetAngle = Math.atan2(this.player.y - this.ai.y, this.player.x - this.ai.x);
     const angleDelta = normalizeAngle(targetAngle - this.ai.angle);
-    const maxTurn = WORLD.aiTurnSpeed * dt;
+    const turnSpeed = this.ai.loadout === "dual" ? WORLD.dualAiTurnSpeed : WORLD.aiTurnSpeed;
+    const maxTurn = turnSpeed * dt;
     this.ai.angle = normalizeAngle(this.ai.angle + clamp(angleDelta, -maxTurn, maxTurn));
   }
 
@@ -216,11 +238,10 @@ export class DuelSystem {
     if (this.player.parryTimer > 0 || this.ai.parryTimer > 0) return;
     if (isJumping(this.player) || isJumping(this.ai)) return;
 
-    const playerSaber = saberSegment(this.player);
-    const aiSaber = saberSegment(this.ai);
-    if (segmentDistance(playerSaber, aiSaber) > WORLD.saberClashDistance) return;
+    const clash = findClosestSaberPair(saberSegments(this.player), saberSegments(this.ai));
+    if (!clash || clash.distance > WORLD.saberClashDistance) return;
 
-    const contactPoint = segmentContactPoint(playerSaber, aiSaber);
+    const contactPoint = segmentContactPoint(clash.a, clash.b);
     const dx = this.ai.x - this.player.x;
     const dy = this.ai.y - this.player.y;
     const gap = Math.hypot(dx, dy) || 1;
@@ -244,16 +265,22 @@ export class DuelSystem {
     if (defender.hitCooldown > 0 || attacker.parryTimer > 0) return;
     if (isJumping(attacker) || isJumping(defender)) return;
 
-    const saber = saberSegment(attacker);
-    const defenderBody = expandRect(bodyRect(defender), WORLD.saberHitPadding);
-    const reachedBody = segmentIntersectsRect(saber, defenderBody);
-    if (!reachedBody) return;
+    const hitSabers = bodyHitSabers(attacker, defender);
+    if (hitSabers.length <= 0) return;
 
-    defender.health = clamp(defender.health - WORLD.damage, 0, 100);
+    const damage = bodyHitDamage(attacker, defender);
+    defender.health = clamp(defender.health - damage, 0, 100);
     defender.hitCooldown = 0.42;
     defender.vx += Math.cos(attacker.angle) * 500;
     defender.vy += Math.sin(attacker.angle) * 500;
-    events.push({ type: "body-hit", attacker: attacker.id, defender: defender.id, damage: WORLD.damage, point: saber.b });
+    events.push({
+      type: "body-hit",
+      attacker: attacker.id,
+      defender: defender.id,
+      damage,
+      saberHits: hitSabers.length,
+      points: hitSabers.map((saber) => ({ ...saber.b }))
+    });
   }
 
   private resolveWinner(events: DuelEvent[]): void {
@@ -272,28 +299,42 @@ export class DuelSystem {
     const dx = this.player.x - this.ai.x;
     const dy = this.player.y - this.ai.y;
     const gap = Math.hypot(dx, dy);
-    const tooClose = gap < 112;
+    const dual = this.ai.loadout === "dual";
+    const tooClose = gap < (dual ? 104 : 112);
+    const targetAngle = Math.atan2(dy, dx);
+    const facingError = Math.abs(normalizeAngle(targetAngle - this.ai.angle));
+    const centerThreat = isDualCenterThreat(this.player, this.ai);
 
     if (this.aiThink <= 0) {
       this.aiThink = 0.18 + Math.random() * 0.18;
       this.aiStrafe = Math.random() > 0.5 ? 1 : -1;
     }
 
-    const approachX = gap > 176 ? dx : tooClose ? -dx : -dy * 0.42 * this.aiStrafe;
-    const approachY = gap > 176 ? dy : tooClose ? -dy : dx * 0.42 * this.aiStrafe;
+    const idealGap = dual ? 140 : 176;
+    const dualDoubleHitPressure = dual && gap <= 206 && facingError < 0.58;
+    const strafeWeight = dualDoubleHitPressure ? 0.18 : dual ? 0.46 : 0.42;
+    const pressureWeight = dualDoubleHitPressure ? 0.58 : 0;
+    const approachX = centerThreat ? dx : gap > idealGap ? dx : tooClose ? -dx : -dy * strafeWeight * this.aiStrafe + dx * pressureWeight;
+    const approachY = centerThreat ? dy : gap > idealGap ? dy : tooClose ? -dy : dx * strafeWeight * this.aiStrafe + dy * pressureWeight;
     const deadZone = 18;
     let jump = false;
     let dash = false;
 
-    if (this.aiActionThink <= 0 && !isJumping(this.ai) && !isDashing(this.ai)) {
-      if (gap > 230 && this.ai.dashCooldown <= 0) {
+    if (centerThreat) {
+      if (this.ai.dashCooldown <= 0 && !isJumping(this.ai) && !isDashing(this.ai)) {
         dash = true;
-        this.aiActionThink = 0.9 + Math.random() * 0.45;
-      } else if (gap <= 230 && this.ai.jumpCooldown <= 0) {
+        this.aiActionThink = 0.65;
+        this.aiCenterCounterCount += 1;
+      }
+    } else if (this.aiActionThink <= 0 && !isJumping(this.ai) && !isDashing(this.ai)) {
+      if (gap > (dual ? 190 : 230) && this.ai.dashCooldown <= 0) {
+        dash = true;
+        this.aiActionThink = (dual ? 0.62 : 0.9) + Math.random() * 0.42;
+      } else if (gap <= (dual ? 220 : 230) && this.ai.jumpCooldown <= 0 && (!dual || Math.random() < 0.46)) {
         jump = true;
-        this.aiActionThink = 1.15 + Math.random() * 0.55;
+        this.aiActionThink = (dual ? 1.6 : 1.15) + Math.random() * (dual ? 0.85 : 0.55);
       } else {
-        this.aiActionThink = 0.18;
+        this.aiActionThink = dual ? 0.34 : 0.18;
       }
     }
 
@@ -315,7 +356,10 @@ export class DuelSystem {
       ai: { ...this.ai },
       events,
       status: this.status,
-      time: this.time
+      time: this.time,
+      aiLoadout: this.aiLoadout,
+      aiCenterThreat: isDualCenterThreat(this.player, this.ai),
+      aiCenterCounterCount: this.aiCenterCounterCount
     };
   }
 }
@@ -334,19 +378,79 @@ export function bodyRect(fighter: FighterState): Rect {
 }
 
 export function saberSegment(fighter: FighterState): Segment {
+  return saberSegments(fighter)[0];
+}
+
+export function saberSegments(fighter: FighterState): Segment[] {
+  if (fighter.loadout === "dual") {
+    return [
+      saberSegmentAt(fighter, -WORLD.dualSaberAngleOffset, -WORLD.dualSaberSideOffset, WORLD.dualSaberLength),
+      saberSegmentAt(fighter, WORLD.dualSaberAngleOffset, WORLD.dualSaberSideOffset, WORLD.dualSaberLength)
+    ];
+  }
+
+  return [saberSegmentAt(fighter, 0, 0, WORLD.saberLength)];
+}
+
+export function bodyHitSabers(attacker: FighterState, defender: FighterState): Segment[] {
+  const defenderBody = expandRect(bodyRect(defender), WORLD.saberHitPadding);
+  return saberSegments(attacker).filter((saber) => segmentIntersectsRect(saber, defenderBody));
+}
+
+export function bodyHitDamage(attacker: FighterState, defender: FighterState): number {
+  return bodyHitSabers(attacker, defender).length * WORLD.damage;
+}
+
+export function isDualCenterThreat(player: FighterState, ai: FighterState): boolean {
+  if (ai.loadout !== "dual" || isJumping(player) || isJumping(ai)) return false;
+
+  const playerSaberTip = saberSegments(player)[0].b;
+  const tipDx = playerSaberTip.x - ai.x;
+  const tipDy = playerSaberTip.y - ai.y;
+  const forwardX = Math.cos(ai.angle);
+  const forwardY = Math.sin(ai.angle);
+  const sideX = Math.cos(ai.angle + Math.PI / 2);
+  const sideY = Math.sin(ai.angle + Math.PI / 2);
+  const forwardDepth = tipDx * forwardX + tipDy * forwardY;
+  const lateralOffset = Math.abs(tipDx * sideX + tipDy * sideY);
+  const aimAtAi = Math.atan2(ai.y - player.y, ai.x - player.x);
+  const aimError = Math.abs(normalizeAngle(aimAtAi - player.angle));
+
+  return (
+    forwardDepth >= 0 &&
+    forwardDepth <= WORLD.dualCenterThreatDepth &&
+    lateralOffset <= WORLD.dualCenterThreatHalfWidth &&
+    aimError <= WORLD.dualCenterAimTolerance
+  );
+}
+
+function saberSegmentAt(fighter: FighterState, angleOffset: number, sideOffset: number, length: number): Segment {
   const saberAngle = fighter.angle;
+  const sideAngle = saberAngle + Math.PI / 2;
   const hilt = {
-    x: fighter.x + Math.cos(saberAngle) * 26,
-    y: fighter.y + Math.sin(saberAngle) * 26
+    x: fighter.x + Math.cos(saberAngle) * WORLD.saberForwardOffset + Math.cos(sideAngle) * sideOffset,
+    y: fighter.y + Math.sin(saberAngle) * WORLD.saberForwardOffset + Math.sin(sideAngle) * sideOffset
   };
+  const bladeAngle = saberAngle + angleOffset;
 
   return {
     a: hilt,
     b: {
-      x: hilt.x + Math.cos(saberAngle) * WORLD.saberLength,
-      y: hilt.y + Math.sin(saberAngle) * WORLD.saberLength
+      x: hilt.x + Math.cos(bladeAngle) * length,
+      y: hilt.y + Math.sin(bladeAngle) * length
     }
   };
+}
+
+function findClosestSaberPair(aSabers: Segment[], bSabers: Segment[]): { a: Segment; b: Segment; distance: number } | undefined {
+  let closest: { a: Segment; b: Segment; distance: number } | undefined;
+  for (const a of aSabers) {
+    for (const b of bSabers) {
+      const distance = segmentDistance(a, b);
+      if (!closest || distance < closest.distance) closest = { a, b, distance };
+    }
+  }
+  return closest;
 }
 
 function expandRect(rect: Rect, amount: number): Rect {
@@ -376,9 +480,10 @@ export function isDashing(fighter: FighterState): boolean {
   return fighter.dashTimer > 0;
 }
 
-function createFighter(id: FighterId, x: number, y: number, angle: number): FighterState {
+function createFighter(id: FighterId, x: number, y: number, angle: number, loadout: FighterLoadout): FighterState {
   return {
     id,
+    loadout,
     x,
     y,
     vx: 0,

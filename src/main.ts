@@ -3,7 +3,7 @@ import { DuelScene } from "./scenes/DuelScene";
 import "./styles/main.css";
 
 const config: Phaser.Types.Core.GameConfig = {
-  type: Phaser.AUTO,
+  type: Phaser.CANVAS,
   parent: "game-root",
   width: 1280,
   height: 720,
