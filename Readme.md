@@ -44,7 +44,7 @@
 ## 起動方法
 
 ```bash
-git clone --branch implementing-dual-wielding-enemy https://github.com/miya123123/lightsaber-duel.git
+git clone https://github.com/miya123123/lightsaber-duel.git
 cd lightsaber-duel
 npm install
 npm run dev
